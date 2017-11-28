@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Script para converter .abook para .vcf
+# Criado por Rennan Cockles
+
+if [[ $1 =~ .*\.abook ]]; then
+  filename="$(sed -r 's/(\.*)\.abook/\1/' < <(basename $1))"
+  name="$HOME/$filename.vcf"
+else
+  echo "arquivo .abook nao encontrado."
+  exit 1
+fi
+
+rm $name
+
+while read line; do
+  echo "BEGIN:VCARD" >> $name
+  echo "VERSION:3.0" >> $name
+  echo "N:$(cut -d'|' -f3 <<<$line);$(cut -d'|' -f2 <<<$line)" >> $name
+  echo "FN:$(cut -d'|' -f1 <<<$line)" >> $name
+  echo "EMAIL;TYPE=PREF,INTERNET:$(cut -d'|' -f4 <<<$line)" >> $name
+  echo "END:VCARD" >> $name
+  echo >> $name
+done < $1
+
+echo "Arquivo $name criado"
+echo $(wc -l $1 | awk {'print $1 " contatos em"'}) $filename.abook
+echo $(wc -l < <(grep BEGIN $name) | awk {'print $1 " contatos recuperados"'})

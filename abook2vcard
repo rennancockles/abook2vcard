@@ -6,12 +6,18 @@
 if [[ $1 =~ .*\.abook ]]; then
   filename="$(sed -r 's/(\.*)\.abook/\1/' < <(basename $1))"
   name="$HOME/$filename.vcf"
+  line_num="$(wc -l $1 | awk '{print $1}')"
 else
-  echo "arquivo .abook nao encontrado."
+  echo "Arquivo .abook nao encontrado."
   exit 1
 fi
 
-rm $name
+if [[ $line_num == 0 ]]; then
+  echo "Nenhum contato encontrado no arquivo $(basename $1)"
+  exit 1
+fi
+
+rm $name 2>/dev/null
 
 while read line; do
   echo "BEGIN:VCARD" >> $name
@@ -24,5 +30,5 @@ while read line; do
 done < $1
 
 echo "Arquivo $name criado"
-echo $(wc -l $1 | awk {'print $1 " contatos em"'}) $filename.abook
+echo $line_num contatos em $filename.abook
 echo $(wc -l < <(grep BEGIN $name) | awk {'print $1 " contatos recuperados"'})
